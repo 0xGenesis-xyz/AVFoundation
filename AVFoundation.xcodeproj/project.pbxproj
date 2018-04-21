@@ -8,24 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		386169A0208A884300C4335A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3861699F208A884300C4335A /* AppDelegate.m */; };
-		386169A3208A884300C4335A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 386169A2208A884300C4335A /* ViewController.m */; };
 		386169A6208A884300C4335A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 386169A4208A884300C4335A /* Main.storyboard */; };
 		386169A8208A884600C4335A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 386169A7208A884600C4335A /* Assets.xcassets */; };
 		386169AB208A884600C4335A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 386169A9208A884600C4335A /* LaunchScreen.storyboard */; };
 		386169AE208A884600C4335A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 386169AD208A884600C4335A /* main.m */; };
+		386169B6208A8AA400C4335A /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 386169B5208A8AA400C4335A /* ViewController.m */; };
+		386169B9208ACFAE00C4335A /* VideoCaptureViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 386169B8208ACFAE00C4335A /* VideoCaptureViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		3861699B208A884300C4335A /* AVFoundation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AVFoundation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3861699E208A884300C4335A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		3861699F208A884300C4335A /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		386169A1208A884300C4335A /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		386169A2208A884300C4335A /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		386169A5208A884300C4335A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		386169A7208A884600C4335A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		386169AA208A884600C4335A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		386169AC208A884600C4335A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		386169AD208A884600C4335A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		386169B4208A8AA400C4335A /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		386169B5208A8AA400C4335A /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		386169B7208ACFAE00C4335A /* VideoCaptureViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoCaptureViewController.h; sourceTree = "<group>"; };
+		386169B8208ACFAE00C4335A /* VideoCaptureViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoCaptureViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,8 +63,10 @@
 			children = (
 				3861699E208A884300C4335A /* AppDelegate.h */,
 				3861699F208A884300C4335A /* AppDelegate.m */,
-				386169A1208A884300C4335A /* ViewController.h */,
-				386169A2208A884300C4335A /* ViewController.m */,
+				386169B4208A8AA400C4335A /* ViewController.h */,
+				386169B5208A8AA400C4335A /* ViewController.m */,
+				386169B7208ACFAE00C4335A /* VideoCaptureViewController.h */,
+				386169B8208ACFAE00C4335A /* VideoCaptureViewController.m */,
 				386169A4208A884300C4335A /* Main.storyboard */,
 				386169A7208A884600C4335A /* Assets.xcassets */,
 				386169A9208A884600C4335A /* LaunchScreen.storyboard */,
@@ -141,7 +146,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				386169A3208A884300C4335A /* ViewController.m in Sources */,
+				386169B6208A8AA400C4335A /* ViewController.m in Sources */,
+				386169B9208ACFAE00C4335A /* VideoCaptureViewController.m in Sources */,
 				386169AE208A884600C4335A /* main.m in Sources */,
 				386169A0208A884300C4335A /* AppDelegate.m in Sources */,
 			);
