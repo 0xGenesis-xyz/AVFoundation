@@ -19,6 +19,7 @@
 
 @property AVAssetWriter *assetWriter;
 @property AVAssetWriterInput *assetWriterInput;
+@property AVAssetWriterInputPixelBufferAdaptor *adaptor;
 @property NSString *outputFilePath;
 @property CMTime lastTimestamp;
 
@@ -52,7 +53,7 @@
         [self.recording setTitle:@"Stop" forState:UIControlStateNormal];
         self.isRecording = YES;
         
-        [self setupAssetWriter];
+        [self setupAssetWriter:CGSizeMake(300, 200)];
 
         [self.assetWriter startWriting];
         [self.assetWriter startSessionAtSourceTime:self.lastTimestamp];
@@ -71,11 +72,13 @@
                     } completionHandler:^(BOOL success, NSError * _Nullable error) {
                         if (success) {
                             NSLog(@"save to camera roll");
+                        } else {
+                            NSLog(@"save fail::%@", error.localizedDescription);
                         }
                     }];
                 }
             } else {
-                NSLog(@"fail");
+                NSLog(@"%ld", (long)[self.assetWriter status]);
             }
         }];
     }
@@ -85,10 +88,33 @@
     CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     self.lastTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
     if (self.isRecording) {
-        if ([self.assetWriterInput isReadyForMoreMediaData]) {
-            [self.assetWriterInput appendSampleBuffer:sampleBuffer];
+        CVPixelBufferRef pixelBufferOut = [self processBuffer:CVPixelBufferGetBaseAddress(pixelBuffer)
+                                                        width:CVPixelBufferGetWidth(pixelBuffer)
+                                                       height:CVPixelBufferGetHeight(pixelBuffer)
+                                              pixelFormatType:CVPixelBufferGetPixelFormatType(pixelBuffer)
+                                                       stride:CVPixelBufferGetBytesPerRow(pixelBuffer)];
+        
+        if (pixelBufferOut == NULL) {
+            NSLog(@"buffer NULL");
+        }
+        
+        if ([self.adaptor.assetWriterInput isReadyForMoreMediaData]) {
+            // [self.assetWriterInput appendSampleBuffer:sampleBuffer];
+            [self.adaptor appendPixelBuffer:pixelBufferOut withPresentationTime:self.lastTimestamp];
+        } else {
+            NSLog(@"writer not ready");
         }
     }
+}
+
+- (CVPixelBufferRef)processBuffer:(void *)baseAddress
+                            width:(size_t)width
+                           height:(size_t)height
+                  pixelFormatType:(OSType)pixelFormatType
+                           stride:(size_t)stride {
+    CVPixelBufferRef pixelBuffer;
+    CVPixelBufferCreateWithBytes(NULL, width, height, pixelFormatType, baseAddress, stride, NULL, NULL, NULL, &pixelBuffer);
+    return pixelBuffer;
 }
 
 - (void)setupCapture {
@@ -121,7 +147,7 @@
     */
 }
 
-- (void)setupAssetWriter {
+- (void)setupAssetWriter:(CGSize)size {
     NSLog(@"configuring AssetWriter...");
     
     NSString *documentsDirectoryPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
@@ -138,11 +164,19 @@
     
     NSDictionary *videoSettings = @{
         AVVideoCodecKey: AVVideoCodecTypeH264,
-        AVVideoWidthKey: [NSNumber numberWithFloat:self.previewView.bounds.size.width],
-        AVVideoHeightKey: [NSNumber numberWithFloat:self.previewView.bounds.size.height]
+        AVVideoWidthKey: [NSNumber numberWithFloat:size.width],
+        AVVideoHeightKey: [NSNumber numberWithFloat:size.height]
     };
     self.assetWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSettings];
     [self.assetWriterInput setExpectsMediaDataInRealTime:YES];
+    
+    NSDictionary *pixelBufferAttributes = @{
+        @"kCVPixelBufferPixelFormatTypeKey": [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32ARGB],
+        @"kCVPixelBufferWidthKey": [NSNumber numberWithFloat:size.width],
+        @"kCVPixelBufferHeightKey": [NSNumber numberWithFloat:size.height]
+    };
+    self.adaptor = [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:self.assetWriterInput
+                                                                                    sourcePixelBufferAttributes:pixelBufferAttributes];
     
     [self.assetWriter addInput:self.assetWriterInput];
 }
