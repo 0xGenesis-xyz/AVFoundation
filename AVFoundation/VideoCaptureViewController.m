@@ -78,7 +78,7 @@
                     }];
                 }
             } else {
-                NSLog(@"%ld", (long)[self.assetWriter status]);
+                NSLog(@"%@", [self.assetWriter error]);
             }
         }];
     }
@@ -88,14 +88,12 @@
     CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     self.lastTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
     if (self.isRecording) {
-        CVPixelBufferRef pixelBufferOut = [self processBuffer:CVPixelBufferGetBaseAddress(pixelBuffer)
-                                                        width:CVPixelBufferGetWidth(pixelBuffer)
-                                                       height:CVPixelBufferGetHeight(pixelBuffer)
-                                              pixelFormatType:CVPixelBufferGetPixelFormatType(pixelBuffer)
-                                                       stride:CVPixelBufferGetBytesPerRow(pixelBuffer)];
+        NSLog(@"%u", (unsigned int)CVPixelBufferGetPixelFormatType(pixelBuffer));
+        CVPixelBufferRef pixelBufferOut = [self processBuffer:pixelBuffer];
         
         if (pixelBufferOut == NULL) {
-            NSLog(@"buffer NULL");
+            NSLog(@"buffer null");
+            return;
         }
         
         if ([self.adaptor.assetWriterInput isReadyForMoreMediaData]) {
@@ -107,14 +105,27 @@
     }
 }
 
-- (CVPixelBufferRef)processBuffer:(void *)baseAddress
-                            width:(size_t)width
-                           height:(size_t)height
-                  pixelFormatType:(OSType)pixelFormatType
-                           stride:(size_t)stride {
-    CVPixelBufferRef pixelBuffer;
-    CVPixelBufferCreateWithBytes(NULL, width, height, pixelFormatType, baseAddress, stride, NULL, NULL, NULL, &pixelBuffer);
-    return pixelBuffer;
+- (CVPixelBufferRef)processBuffer:(CVPixelBufferRef)pixelBuffer {
+    size_t width = CVPixelBufferGetWidth(pixelBuffer);
+    size_t height = CVPixelBufferGetHeight(pixelBuffer);
+    OSType pixelFormatType = CVPixelBufferGetPixelFormatType(pixelBuffer);
+    void *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    /*
+    size_t numberOfPlanes = CVPixelBufferGetPlaneCount(pixelBuffer);
+    void *planeBaseAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer);
+    size_t planeWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer);
+    size_t planeHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer);
+    size_t planeBytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer);
+    */
+    CVPixelBufferRef pixelBufferOut;
+    CVPixelBufferCreateWithBytes(NULL, width, height, pixelFormatType, baseAddress, bytesPerRow, NULL, NULL, NULL, &pixelBufferOut);
+    //CVPixelBufferCreateWithPlanarBytes(NULL, width, height, pixelFormatType, <#void * _Nullable dataPtr#>, <#size_t dataSize#>, numberOfPlanes, planeBaseAddress, planeWidth, planeHeight, planeBytesPerRow, NULL, NULL, NULL, pixelBufferOut)
+    return pixelBufferOut;
+}
+
+void releaseBytesCallback(void *releaseRefCon, const void *baseAddress) {
+    CVPixelBufferRelease(releaseRefCon);
 }
 
 - (void)setupCapture {
@@ -129,22 +140,13 @@
     AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
     [self.session addInput:input];
     
-    AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
+    AVCaptureVideoDataOutput *output = [AVCaptureVideoDataOutput new];
+    NSLog(@"CVPixelFormat: %@", [output availableVideoCVPixelFormatTypes]);
+    NSDictionary *outputSettings = @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };
+    [output setVideoSettings: outputSettings];
     dispatch_queue_t queue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
     [output setSampleBufferDelegate:self queue:queue];
     [self.session addOutput:output];
-    /*
-    NSString *mediaType = AVMediaTypeVideo;
-    [AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
-        if (granted) {
-            [self setDeviceAuthorized:YES];
-        } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self setDeviceAuthorized:NO];
-            });
-        }
-    }];
-    */
 }
 
 - (void)setupAssetWriter:(CGSize)size {
@@ -171,9 +173,9 @@
     [self.assetWriterInput setExpectsMediaDataInRealTime:YES];
     
     NSDictionary *pixelBufferAttributes = @{
-        @"kCVPixelBufferPixelFormatTypeKey": [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32ARGB],
-        @"kCVPixelBufferWidthKey": [NSNumber numberWithFloat:size.width],
-        @"kCVPixelBufferHeightKey": [NSNumber numberWithFloat:size.height]
+        (NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
+        (NSString *)kCVPixelBufferWidthKey: [NSNumber numberWithFloat:size.width],
+        (NSString *)kCVPixelBufferHeightKey: [NSNumber numberWithFloat:size.height]
     };
     self.adaptor = [AVAssetWriterInputPixelBufferAdaptor assetWriterInputPixelBufferAdaptorWithAssetWriterInput:self.assetWriterInput
                                                                                     sourcePixelBufferAttributes:pixelBufferAttributes];
