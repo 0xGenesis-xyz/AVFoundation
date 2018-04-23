@@ -88,14 +88,9 @@
     CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     self.lastTimestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
     if (self.isRecording) {
-        NSLog(@"%u", (unsigned int)CVPixelBufferGetPixelFormatType(pixelBuffer));
-        CVPixelBufferRef pixelBufferOut = [self processBuffer:pixelBuffer];
-        
-        if (pixelBufferOut == NULL) {
-            NSLog(@"buffer null");
-            return;
-        }
-        
+        CVPixelBufferRef pixelBufferOut;
+        [self processBuffer:pixelBuffer bufferOut:&pixelBufferOut];
+
         if ([self.adaptor.assetWriterInput isReadyForMoreMediaData]) {
             // [self.assetWriterInput appendSampleBuffer:sampleBuffer];
             [self.adaptor appendPixelBuffer:pixelBufferOut withPresentationTime:self.lastTimestamp];
@@ -105,23 +100,18 @@
     }
 }
 
-- (CVPixelBufferRef)processBuffer:(CVPixelBufferRef)pixelBuffer {
+- (void)processBuffer:(CVPixelBufferRef)pixelBuffer bufferOut:(CVPixelBufferRef *)pixelBufferOut {
     size_t width = CVPixelBufferGetWidth(pixelBuffer);
     size_t height = CVPixelBufferGetHeight(pixelBuffer);
     OSType pixelFormatType = CVPixelBufferGetPixelFormatType(pixelBuffer);
+    
+    CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
     void *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+    
     size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
-    /*
-    size_t numberOfPlanes = CVPixelBufferGetPlaneCount(pixelBuffer);
-    void *planeBaseAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer);
-    size_t planeWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer);
-    size_t planeHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer);
-    size_t planeBytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer);
-    */
-    CVPixelBufferRef pixelBufferOut;
-    CVPixelBufferCreateWithBytes(NULL, width, height, pixelFormatType, baseAddress, bytesPerRow, NULL, NULL, NULL, &pixelBufferOut);
-    //CVPixelBufferCreateWithPlanarBytes(NULL, width, height, pixelFormatType, <#void * _Nullable dataPtr#>, <#size_t dataSize#>, numberOfPlanes, planeBaseAddress, planeWidth, planeHeight, planeBytesPerRow, NULL, NULL, NULL, pixelBufferOut)
-    return pixelBufferOut;
+    
+    CVPixelBufferCreateWithBytes(NULL, width, height, pixelFormatType, baseAddress, bytesPerRow, NULL, NULL, NULL, pixelBufferOut);
 }
 
 void releaseBytesCallback(void *releaseRefCon, const void *baseAddress) {
